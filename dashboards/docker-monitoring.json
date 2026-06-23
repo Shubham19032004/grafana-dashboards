@@ -1,0 +1,501 @@
+{
+  "uid": "docker-monitor-01",
+  "title": "Infrastructure Monitoring",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "tags": ["infrastructure", "monitoring", "timescaledb"],
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total Nodes",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT COUNT(*) AS \"Total Nodes\" FROM nodes",
+        "format": "table",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Nodes Reachable",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT COUNT(*) AS \"Reachable\" FROM node_bgw_state WHERE reachable = true",
+        "format": "table",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Open System Alerts",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT COUNT(*) AS \"Open Alerts\" FROM system_alert WHERE resolved_at IS NULL",
+        "format": "table",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Security Incidents (24h)",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 1 },
+              { "color": "red", "value": 10 }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT COUNT(*) AS \"Incidents\" FROM container_behavior_incidents WHERE observed_at > NOW() - INTERVAL '24 hours'",
+        "format": "table",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Node Fleet",
+      "description": "All registered nodes with current reachability and BGW state",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 4 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "displayMode": "auto" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "reachable" },
+            "properties": [{
+              "id": "custom.displayMode", "value": "color-background"
+            }, {
+              "id": "mappings",
+              "value": [
+                { "type": "value", "options": { "true":  { "text": "YES", "color": "green" } } },
+                { "type": "value", "options": { "false": { "text": "NO",  "color": "red"   } } }
+              ]
+            }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [{
+              "id": "custom.displayMode", "value": "color-background"
+            }, {
+              "id": "mappings",
+              "value": [
+                { "type": "value", "options": { "ok":       { "text": "OK",       "color": "green"  } } },
+                { "type": "value", "options": { "warning":  { "text": "WARNING",  "color": "yellow" } } },
+                { "type": "value", "options": { "critical": { "text": "CRITICAL", "color": "red"    } } }
+              ]
+            }]
+          }
+        ]
+      },
+      "options": {
+        "footer": { "show": false },
+        "showHeader": true,
+        "sortBy": [{ "displayName": "registered_at", "desc": true }]
+      },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT\n  n.hostname,\n  n.status::text AS status,\n  n.os_name,\n  n.cpu_model,\n  n.cpu_cores,\n  n.memory_total,\n  n.pci_gpu_count AS gpus,\n  COALESCE(b.reachable::text, 'unknown') AS reachable,\n  COALESCE(b.severity, 'unknown') AS severity,\n  COALESCE(b.consecutive_failures, 0) AS consecutive_failures,\n  n.agent_version,\n  n.registered_at\nFROM nodes n\nLEFT JOIN node_bgw_state b ON n.node_id = b.node_id\nORDER BY n.hostname",
+        "format": "table",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Node Health Check Results Over Time",
+      "description": "Pass/fail count of health observations per interval",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 14 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "lineInterpolation": "linear",
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": { "mode": "none", "group": "A" }
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT\n  $__timeGroupAlias(observed_at, $__interval),\n  COUNT(*) FILTER (WHERE verdict = 1) AS \"Passed\",\n  COUNT(*) FILTER (WHERE verdict = 0) AS \"Failed\"\nFROM node_health_observations\nWHERE $__timeFilter(observed_at)\nGROUP BY 1\nORDER BY 1",
+        "format": "time_series",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "System Alerts Over Time",
+      "description": "Alerts triggered per interval, by severity",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 14 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "gradientMode": "none",
+            "lineInterpolation": "linear",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "mode": "normal", "group": "A" }
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "critical" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "warning"  }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "info"     }, "properties": [{ "id": "color", "value": { "fixedColor": "blue", "mode": "fixed" } }] }
+        ]
+      },
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT\n  $__timeGroupAlias(triggered_at, $__interval),\n  severity,\n  COUNT(*) AS count\nFROM system_alert\nWHERE $__timeFilter(triggered_at)\nGROUP BY 1, severity\nORDER BY 1",
+        "format": "time_series",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Container Security Incident Rate",
+      "description": "Security incidents per interval, by confidence tier",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 23 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 1,
+            "fillOpacity": 60,
+            "gradientMode": "none",
+            "lineInterpolation": "linear",
+            "showPoints": "never",
+            "spanNulls": false,
+            "stacking": { "mode": "normal", "group": "A" }
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "HIGH"   }, "properties": [{ "id": "color", "value": { "fixedColor": "red",    "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "MEDIUM" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "LOW"    }, "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }] }
+        ]
+      },
+      "options": {
+        "legend": { "calcs": ["sum"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT\n  $__timeGroupAlias(observed_at, $__interval),\n  confidence_tier,\n  COUNT(*) AS count\nFROM container_behavior_incidents\nWHERE $__timeFilter(observed_at)\nGROUP BY 1, confidence_tier\nORDER BY 1",
+        "format": "time_series",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Recent Security Incidents",
+      "description": "Latest container behavior incidents with action taken",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 23 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "displayMode": "auto" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "confidence_tier" },
+            "properties": [{
+              "id": "custom.displayMode", "value": "color-background"
+            }, {
+              "id": "mappings",
+              "value": [
+                { "type": "value", "options": { "HIGH":   { "color": "red"    } } },
+                { "type": "value", "options": { "MEDIUM": { "color": "orange" } } },
+                { "type": "value", "options": { "LOW":    { "color": "yellow" } } }
+              ]
+            }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "action_taken" },
+            "properties": [{
+              "id": "custom.displayMode", "value": "color-background"
+            }, {
+              "id": "mappings",
+              "value": [
+                { "type": "value", "options": { "auto_quarantine": { "color": "red"    } } },
+                { "type": "value", "options": { "throttled":       { "color": "orange" } } },
+                { "type": "value", "options": { "counter_only":    { "color": "blue"   } } },
+                { "type": "value", "options": { "log_only":        { "color": "green"  } } }
+              ]
+            }]
+          }
+        ]
+      },
+      "options": { "footer": { "show": false }, "showHeader": true },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT\n  cbi.observed_at,\n  n.hostname,\n  cbi.container_id,\n  cbi.rule_name,\n  cbi.confidence_tier,\n  cbi.action_taken,\n  cbi.source,\n  cbi.detail\nFROM container_behavior_incidents cbi\nLEFT JOIN nodes n ON cbi.node_id = n.node_id\nWHERE $__timeFilter(cbi.observed_at)\nORDER BY cbi.observed_at DESC\nLIMIT 50",
+        "format": "table",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Deployment Jobs",
+      "description": "Agent deployment job history with per-node success/failure counts",
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 32 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "displayMode": "auto" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "status" },
+            "properties": [{
+              "id": "custom.displayMode", "value": "color-background"
+            }, {
+              "id": "mappings",
+              "value": [
+                { "type": "value", "options": { "COMPLETED": { "color": "green"  } } },
+                { "type": "value", "options": { "FAILED":    { "color": "red"    } } },
+                { "type": "value", "options": { "PENDING":   { "color": "yellow" } } },
+                { "type": "value", "options": { "RUNNING":   { "color": "blue"   } } }
+              ]
+            }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "success_pct" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "custom.displayMode", "value": "lcd-gauge" },
+              { "id": "color", "value": { "mode": "thresholds" } },
+              { "id": "thresholds", "value": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red",    "value": null },
+                  { "color": "yellow", "value": 50   },
+                  { "color": "green",  "value": 90   }
+                ]
+              }}
+            ]
+          }
+        ]
+      },
+      "options": { "footer": { "show": false }, "showHeader": true },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT\n  build_version,\n  status::text,\n  total_nodes,\n  success_count,\n  failed_count,\n  ROUND(100.0 * success_count / NULLIF(total_nodes, 0), 1) AS success_pct,\n  created_at,\n  updated_at\nFROM deployment_jobs\nORDER BY created_at DESC\nLIMIT 20",
+        "format": "table",
+        "refId": "A"
+      }]
+    },
+
+    {
+      "id": 11,
+      "type": "table",
+      "title": "Node Downtime Events",
+      "description": "Historical and ongoing downtime windows per node",
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 32 },
+      "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "auto", "displayMode": "auto" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "state" },
+            "properties": [{
+              "id": "custom.displayMode", "value": "color-background"
+            }, {
+              "id": "mappings",
+              "value": [
+                { "type": "value", "options": { "ONGOING":  { "color": "red"   } } },
+                { "type": "value", "options": { "RESOLVED": { "color": "green" } } }
+              ]
+            }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "duration_s" },
+            "properties": [{ "id": "unit", "value": "s" }]
+          }
+        ]
+      },
+      "options": { "footer": { "show": false }, "showHeader": true },
+      "targets": [{
+        "datasource": { "type": "postgres", "uid": "${DS_TIMESCALEDB}" },
+        "rawSql": "SELECT\n  n.hostname,\n  d.started_at,\n  d.ended_at,\n  d.duration_s,\n  CASE WHEN d.ended_at IS NULL THEN 'ONGOING' ELSE 'RESOLVED' END AS state\nFROM node_downtime_events d\nJOIN nodes n ON d.node_id::uuid = n.node_id\nORDER BY d.started_at DESC\nLIMIT 30",
+        "format": "table",
+        "refId": "A"
+      }]
+    }
+
+  ],
+
+  "templating": {
+    "list": [
+      {
+        "current": {},
+        "hide": 0,
+        "includeAll": false,
+        "label": "TimescaleDB",
+        "multi": false,
+        "name": "DS_TIMESCALEDB",
+        "options": [],
+        "query": "postgres",
+        "refresh": 1,
+        "regex": "",
+        "type": "datasource"
+      }
+    ]
+  },
+
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  }
+}
