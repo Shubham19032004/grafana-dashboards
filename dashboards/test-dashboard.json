@@ -1,0 +1,12 @@
+{
+  "apiVersion": "dashboard.grafana.app/v1alpha1",
+  "kind": "Dashboard",
+  "metadata": {
+    "name": "test-dashboard"
+  },
+  "spec": {
+    "title": "Test Provisioned Dashboard",
+    "schemaVersion": 36,
+    "panels": []
+  }
+}
